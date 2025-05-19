@@ -28,6 +28,7 @@ export interface Lead {
   email: string;
   isProspect: boolean;
   status: string;
+  user_id?: string; // Added user_id field to track lead ownership
   created_at?: string;
   updated_at?: string;
 }
@@ -55,20 +56,32 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Fetch leads from Supabase on component mount
+  // Get current user ID on component mount
   useEffect(() => {
-    fetchLeads();
+    const storedUserId = localStorage.getItem("userId");
+    setUserId(storedUserId);
+    
+    if (storedUserId) {
+      fetchLeads(storedUserId);
+    } else {
+      // If no user ID is found, show an error
+      setLeads([]);
+      setError("Please log in to view your leads");
+      setLoading(false);
+    }
   }, []);
 
-  // Function to fetch leads from Supabase
-  const fetchLeads = async () => {
+  // Function to fetch leads from Supabase for the current user
+  const fetchLeads = async (currentUserId: string) => {
     try {
       setLoading(true);
       
       const { data, error } = await supabase
         .from('leads')
         .select('*')
+        .eq('user_id', currentUserId)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -83,6 +96,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: lead.email,
         isProspect: lead.is_prospect,
         status: lead.status,
+        user_id: lead.user_id,
         created_at: lead.created_at,
         updated_at: lead.updated_at
       }));
@@ -101,13 +115,19 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   // Function to add a new lead
   const addLead = async (leadData: NewLeadData) => {
     try {
-      // Prepare the lead data for insertion
+      if (!userId) {
+        toast.error("Please log in to add leads");
+        throw new Error("User not logged in");
+      }
+
+      // Prepare the lead data for insertion with the user_id
       const newLeadData = {
         name: leadData.name,
         mobile: leadData.mobileNumber,
         email: leadData.email,
         is_prospect: leadData.prospect === "Yes" || leadData.prospect === "yes" || leadData.prospect === "true" || leadData.prospect === "True",
-        status: leadData.status
+        status: leadData.status,
+        user_id: userId // Associate lead with current user
       };
 
       // Insert the new lead into Supabase
@@ -129,6 +149,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: data.email,
         isProspect: data.is_prospect,
         status: data.status,
+        user_id: data.user_id,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -200,11 +221,17 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   // Handler for updating lead status
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      // Update the lead status in Supabase
+      if (!userId) {
+        toast.error("You must be logged in to update leads");
+        return;
+      }
+
+      // Update the lead status in Supabase, ensuring user owns the lead
       const { error } = await supabase
         .from('leads')
         .update({ status: newStatus })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId); // Ensure lead belongs to current user
 
       if (error) {
         throw error;
@@ -226,6 +253,11 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   // Handler for updating lead details
   const handleLeadUpdate = async (id: string, updatedData: Omit<Lead, "id">) => {
     try {
+      if (!userId) {
+        toast.error("You must be logged in to update leads");
+        return;
+      }
+
       // Prepare the data for update
       const updateData = {
         name: updatedData.name,
@@ -235,11 +267,12 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         status: updatedData.status
       };
 
-      // Update the lead in Supabase
+      // Update the lead in Supabase, ensuring user owns the lead
       const { error } = await supabase
         .from('leads')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId); // Ensure lead belongs to current user
 
       if (error) {
         throw error;
@@ -262,11 +295,17 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
     if (!selectedLead) return;
     
     try {
-      // Delete the lead from Supabase
+      if (!userId) {
+        toast.error("You must be logged in to delete leads");
+        return;
+      }
+
+      // Delete the lead from Supabase, ensuring user owns the lead
       const { error } = await supabase
         .from('leads')
         .delete()
-        .eq('id', selectedLead.id);
+        .eq('id', selectedLead.id)
+        .eq('user_id', userId); // Ensure lead belongs to current user
 
       if (error) {
         throw error;
@@ -329,12 +368,16 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         </div>
       ) : error ? (
         <div className="flex flex-col justify-center items-center h-60">
-          <div className="text-red-500 mb-2">Failed to load leads</div>
-          <Button onClick={fetchLeads}>Retry</Button>
+          <div className="text-red-500 mb-2">{error}</div>
+          {userId && <Button onClick={() => fetchLeads(userId)}>Retry</Button>}
         </div>
       ) : leads.length === 0 ? (
         <div className="flex justify-center items-center h-60">
-          <div className="text-gray-500">No leads found. Add your first lead by clicking the "Add New Lead" button.</div>
+          <div className="text-gray-500">
+            {userId 
+              ? "No leads found. Add your first lead by clicking the \"Add New Lead\" button." 
+              : "Please log in to view and manage your leads."}
+          </div>
         </div>
       ) : (
         <Table>

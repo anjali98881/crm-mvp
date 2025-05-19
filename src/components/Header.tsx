@@ -11,26 +11,37 @@ interface HeaderProps {
 }
 
 const Header = ({ title, actionButton }: HeaderProps) => {
-  // This would typically come from an auth context
-  const isLoggedIn = true; // Changed to true for this implementation
+  // Check if user is logged in based on localStorage
+  const isLoggedIn = localStorage.getItem("userLoggedIn") === "true";
+  const userEmail = localStorage.getItem("userEmail");
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    // Here you would typically sign out the user from your auth system
-    // For now, we'll just simulate a sign out with a timeout
+    // Clear all user-related data from localStorage
+    localStorage.removeItem("userLoggedIn");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userId");
+    
     toast.info("Signing out...");
     
     setTimeout(() => {
       // Redirect to the sign in page
       navigate("/signin");
       toast.success("Successfully signed out!");
-    }, 1000);
+    }, 500);
   };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          {isLoggedIn && userEmail && (
+            <span className="ml-4 text-sm text-gray-500">
+              Logged in as: <span className="font-medium">{userEmail}</span>
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-4">
           {!isLoggedIn ? (
             <>

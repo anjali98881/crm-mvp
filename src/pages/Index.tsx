@@ -1,5 +1,6 @@
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
@@ -9,7 +10,20 @@ import { Toaster } from "sonner";
 
 const Index = () => {
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const addLeadFunctionRef = useRef<((data: NewLeadData) => void) | null>(null);
+  const navigate = useNavigate();
+
+  // Check if user is logged in on component mount
+  useEffect(() => {
+    const userLoggedIn = localStorage.getItem("userLoggedIn") === "true";
+    setIsLoggedIn(userLoggedIn);
+    
+    // If user is not logged in, redirect to sign in page
+    if (!userLoggedIn) {
+      navigate("/signin");
+    }
+  }, [navigate]);
 
   // Function to set the addLead function from LeadTable
   const setAddLeadFunction = (addLeadFn: (data: NewLeadData) => void) => {
@@ -22,6 +36,10 @@ const Index = () => {
       addLeadFunctionRef.current(leadData);
     }
   };
+
+  if (!isLoggedIn) {
+    return null; // Don't render anything while checking auth or redirecting
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
