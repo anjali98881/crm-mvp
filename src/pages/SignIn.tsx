@@ -46,53 +46,48 @@ const SignIn = () => {
     try {
       console.log(`Attempting to log in user: ${email}`);
       
-      // Query the userdetails table without .single() to avoid errors when no user is found
-      const { data, error } = await supabase
+      // First, check if the user exists and get all fields
+      const { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
-        .eq('email', email);
+        .eq('email', email.trim());
       
       if (error) {
-        console.error("Login query error:", error);
-        setErrorMessage("An error occurred during login");
-        setIsLoading(false);
-        return;
+        console.error("Database query error:", error);
+        throw new Error("An error occurred during login");
       }
       
-      console.log("Query result:", data);
+      console.log("Query result:", users);
       
       // Check if any user was found
-      if (data && data.length > 0) {
-        // Check if the password matches
-        const user = data[0];
-        console.log("Found user:", { id: user.id, email: user.email });
-        
-        // Case-sensitive password comparison
-        if (user.password === password) {
-          // Successful login
-          console.log("Login successful for user ID:", user.id);
-          toast.success("Login successful!");
-          
-          // Set up user session
-          localStorage.setItem("userLoggedIn", "true");
-          localStorage.setItem("userEmail", email);
-          localStorage.setItem("userId", user.id);
-          
-          // Redirect to the home page
-          navigate("/");
-        } else {
-          // Invalid password
-          console.log("Password mismatch - entered:", password, "stored:", user.password);
-          setErrorMessage("Invalid email or password");
-        }
-      } else {
-        // User not found
-        console.log("User not found for email:", email);
-        setErrorMessage("Invalid email or password");
+      if (!users || users.length === 0) {
+        console.log("No user found for email:", email);
+        throw new Error("Invalid email or password");
       }
+      
+      const user = users[0];
+      console.log("Found user:", { id: user.id, email: user.email });
+      
+      // Compare passwords (case-sensitive)
+      if (user.password !== password) {
+        console.log("Password mismatch");
+        throw new Error("Invalid email or password");
+      }
+      
+      // Successful login
+      console.log("Login successful for user ID:", user.id);
+      toast.success("Login successful!");
+      
+      // Set up user session
+      localStorage.setItem("userLoggedIn", "true");
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem("userId", user.id);
+      
+      // Redirect to the home page
+      navigate("/");
     } catch (error) {
       console.error("Login error:", error);
-      setErrorMessage("An error occurred during login");
+      setErrorMessage(error instanceof Error ? error.message : "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
