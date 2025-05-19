@@ -53,7 +53,7 @@ const SignIn = () => {
       console.log("Input password:", password);
       
       // Query the userdetails table with exact email match
-      const { data: users, error } = await supabase
+      let { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
         .eq('email', trimmedEmail);
@@ -85,7 +85,7 @@ const SignIn = () => {
           throw new Error("Invalid email or password");
         }
         
-        // Use the first matching user
+        // Use the first matching user (fixed: assign to users instead of reassigning const)
         users = caseInsensitiveUsers;
       }
       
