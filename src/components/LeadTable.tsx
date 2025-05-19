@@ -2,9 +2,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Pencil } from "lucide-react";
+import { Mail, Pencil, Trash2 } from "lucide-react";
 import UpdateStatusModal from "./UpdateStatusModal";
 import SendEmailModal from "./SendEmailModal";
+import EditLeadModal from "./EditLeadModal";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 // Sample data for the leads
 const initialLeads = [
@@ -78,6 +90,8 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
+  const [isEditLeadModalOpen, setIsEditLeadModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Function to add a new lead
@@ -137,12 +151,40 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
     setIsSendEmailModalOpen(true);
   };
 
+  // Handler for opening edit lead modal
+  const handleEditLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsEditLeadModalOpen(true);
+  };
+
+  // Handler for opening delete confirmation
+  const handleDeleteConfirm = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsDeleteConfirmOpen(true);
+  };
+
   // Handler for updating lead status
   const handleStatusChange = (id: number, newStatus: string) => {
     setLeads(leads.map(lead => 
       lead.id === id ? { ...lead, status: newStatus } : lead
     ));
     setIsUpdateStatusModalOpen(false);
+  };
+
+  // Handler for updating lead details
+  const handleLeadUpdate = (id: number, updatedData: Omit<Lead, "id">) => {
+    setLeads(leads.map(lead => 
+      lead.id === id ? { ...lead, ...updatedData } : lead
+    ));
+  };
+
+  // Handler for deleting a lead
+  const handleDeleteLead = () => {
+    if (selectedLead) {
+      setLeads(leads.filter(lead => lead.id !== selectedLead.id));
+      toast.success(`${selectedLead.name} has been removed from the leads list`);
+      setIsDeleteConfirmOpen(false);
+    }
   };
 
   // Make addLead available to parent components
@@ -193,6 +235,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
             <TableHead className="w-[100px]">Prospect</TableHead>
             <TableHead className="w-[150px]">Status</TableHead>
             <TableHead className="w-[150px] text-center">Send Email</TableHead>
+            <TableHead className="w-[120px] text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -231,6 +274,26 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
                   <Mail className="h-4 w-4" />
                 </Button>
               </TableCell>
+              <TableCell>
+                <div className="flex justify-center items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEditLead(lead)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDeleteConfirm(lead)}
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -254,6 +317,38 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
           lead={selectedLead}
         />
       )}
+
+      {/* Edit Lead Modal */}
+      {selectedLead && (
+        <EditLeadModal
+          open={isEditLeadModalOpen}
+          onOpenChange={setIsEditLeadModalOpen}
+          lead={selectedLead}
+          onSave={handleLeadUpdate}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this lead?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the lead
+              {selectedLead && ` "${selectedLead.name}"`} and remove their data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDeleteLead}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
