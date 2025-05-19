@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -41,12 +42,11 @@ export interface NewLeadData {
   status: string;
 }
 
-// Define a standalone type for the add lead function to avoid circular references
+// Define a standalone function type to avoid circular references
 export type AddLeadFunction = (data: NewLeadData) => Promise<Lead>;
 
 // Define props interface with the onAddLead function
 interface LeadTableProps {
-  // Use the standalone AddLeadFunction type here
   onAddLead?: (addLeadFn: AddLeadFunction) => void;
 }
 
@@ -82,10 +82,10 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
       setLoading(true);
       
       const { data, error } = await supabase
-  .from('leads')
-  .select('*')
-  .eq('user_id', currentUserId)
-  .order('created_at', { ascending: false }) as unknown as { data: Lead[]; error: any };
+        .from('leads')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false });
       
       if (error) {
         throw error;
@@ -104,7 +104,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: lead.email,
         isProspect: lead.is_prospect,
         status: lead.status,
-        user_id: (lead as any).user_id || currentUserId,
+        user_id: lead.user_id || currentUserId,
         created_at: lead.created_at,
         updated_at: lead.updated_at
       }));
@@ -120,7 +120,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
     }
   };
 
-  // Function to add a new lead - explicitly implementing the AddLeadFunction type
+  // Function to add a new lead - explicitly defined as AddLeadFunction
   const addLead: AddLeadFunction = async (leadData) => {
     try {
       if (!userId) {
@@ -161,7 +161,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: data.email,
         isProspect: data.is_prospect,
         status: data.status,
-        user_id: (data as any).user_id || userId,
+        user_id: data.user_id || userId,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
