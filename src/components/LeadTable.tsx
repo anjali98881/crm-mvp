@@ -61,25 +61,28 @@ export interface Lead {
   status: string;
 }
 
-// Define props interface with the addLead function
-interface LeadTableProps {
-  onAddLead?: (lead: Omit<Lead, 'id'>) => void;
+// Define the type for new lead data coming from the form
+export interface NewLeadData {
+  name: string;
+  mobileNumber: string;
+  email: string;
+  prospect: string;
+  status: string;
 }
 
-const LeadTable = ({ onAddLead }: LeadTableProps = {}) => {
+// Define props interface with the setAddLeadFunction function
+interface LeadTableProps {
+  onAddLead?: (addLeadFn: (data: NewLeadData) => void) => void;
+}
+
+const LeadTable = ({ onAddLead }: LeadTableProps) => {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Function to add a new lead
-  const addLead = (leadData: { 
-    name: string; 
-    mobileNumber: string; 
-    email: string; 
-    prospect: string; 
-    status: string;
-  }) => {
+  const addLead = (leadData: NewLeadData) => {
     const newId = leads.length > 0 ? Math.max(...leads.map(lead => lead.id)) + 1 : 1;
     
     const newLead: Lead = {

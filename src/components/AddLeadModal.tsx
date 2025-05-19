@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,21 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { NewLeadData } from "./LeadTable";
 
 interface AddLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddLead?: (leadData: {
-    name: string;
-    mobileNumber: string;
-    email: string;
-    prospect: string;
-    status: string;
-  }) => void;
+  onAddLead?: (leadData: NewLeadData) => void;
 }
 
 const AddLeadModal = ({ open, onOpenChange, onAddLead }: AddLeadModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NewLeadData>({
     name: "",
     mobileNumber: "",
     email: "",
