@@ -12,24 +12,40 @@ interface HeaderProps {
 
 const Header = ({ title, actionButton }: HeaderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check if user is logged in when component mounts
+  // Check if user is logged in when component mounts or when localStorage changes
   useEffect(() => {
-    const userLoggedIn = localStorage.getItem("userLoggedIn") === "true";
-    setIsLoggedIn(userLoggedIn);
+    const checkLoginStatus = () => {
+      const userLoggedIn = localStorage.getItem("userLoggedIn") === "true";
+      const email = localStorage.getItem("userEmail");
+      setIsLoggedIn(userLoggedIn);
+      setUserEmail(email);
+    };
+
+    checkLoginStatus();
+
+    // Add event listener to detect localStorage changes
+    window.addEventListener('storage', checkLoginStatus);
+    
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+    };
   }, []);
 
   const handleSignOut = () => {
     // Remove user login info from localStorage
     localStorage.removeItem("userLoggedIn");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("userId");
     
     toast.info("Signing out...");
     
     setTimeout(() => {
       // Update logged in state
       setIsLoggedIn(false);
+      setUserEmail(null);
       // Redirect to the sign in page
       navigate("/signin");
       toast.success("Successfully signed out!");
@@ -57,10 +73,17 @@ const Header = ({ title, actionButton }: HeaderProps) => {
               </Link>
             </>
           ) : (
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-4">
+              {userEmail && (
+                <span className="text-sm text-gray-600 mr-2">
+                  {userEmail}
+                </span>
+              )}
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           )}
           {actionButton}
         </div>
