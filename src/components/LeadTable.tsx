@@ -88,6 +88,11 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         throw error;
       }
 
+      if (!data) {
+        setLeads([]);
+        return;
+      }
+
       // Transform the data to match our Lead interface
       const transformedLeads: Lead[] = data.map(lead => ({
         id: lead.id,
@@ -96,7 +101,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: lead.email,
         isProspect: lead.is_prospect,
         status: lead.status,
-        user_id: lead.user_id,
+        user_id: lead.user_id || currentUserId, // Use the current user ID as fallback
         created_at: lead.created_at,
         updated_at: lead.updated_at
       }));
@@ -141,6 +146,10 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         throw error;
       }
 
+      if (!data) {
+        throw new Error("Failed to create lead");
+      }
+
       // Transform the returned lead to match our Lead interface
       const newLead: Lead = {
         id: data.id,
@@ -149,7 +158,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: data.email,
         isProspect: data.is_prospect,
         status: data.status,
-        user_id: data.user_id,
+        user_id: data.user_id || userId, // Use the current user ID as fallback
         created_at: data.created_at,
         updated_at: data.updated_at
       };
