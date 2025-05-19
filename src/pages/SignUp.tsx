@@ -78,11 +78,14 @@ const SignUp = () => {
       }
       
       // Insert user details into the userdetails table
+      // Convert mobile string to number to match the database type
       const { error } = await supabase
         .from('userdetails')
-        .insert([
-          { email, password, mobile }
-        ]);
+        .insert({
+          email, 
+          password, 
+          mobile: Number(mobile) // Convert string to number
+        });
       
       if (error) {
         console.error("Error inserting user details:", error);
