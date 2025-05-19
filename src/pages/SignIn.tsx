@@ -45,15 +45,18 @@ const SignIn = () => {
     
     try {
       // Trim the email to remove any leading/trailing whitespace
-      const trimmedEmail = email.trim();
+      const trimmedEmail = email.trim().toLowerCase();
       
       console.log(`Attempting to log in user: ${trimmedEmail}`);
       
-      // Query the userdetails table with case-insensitive email comparison
+      // First, log the password that was input to check its format
+      console.log("Input password:", password);
+      
+      // Query the userdetails table with exact email match
       const { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
-        .ilike('email', trimmedEmail);
+        .eq('email', trimmedEmail);
       
       if (error) {
         console.error("Database query error:", error);
@@ -62,28 +65,58 @@ const SignIn = () => {
       
       console.log("Query result:", users);
       
-      // Check if any user was found
+      // If no users found, try case-insensitive search
       if (!users || users.length === 0) {
-        console.log("No user found for email:", trimmedEmail);
-        throw new Error("Invalid email or password");
+        console.log("No exact match found, trying case-insensitive search");
+        const { data: caseInsensitiveUsers, error: caseError } = await supabase
+          .from('userdetails')
+          .select('*')
+          .ilike('email', trimmedEmail);
+        
+        if (caseError) {
+          console.error("Case-insensitive query error:", caseError);
+          throw new Error("An error occurred during login");
+        }
+        
+        console.log("Case-insensitive results:", caseInsensitiveUsers);
+        
+        if (!caseInsensitiveUsers || caseInsensitiveUsers.length === 0) {
+          console.log("No user found for email:", trimmedEmail);
+          throw new Error("Invalid email or password");
+        }
+        
+        // Use the first matching user
+        users = caseInsensitiveUsers;
       }
       
       const user = users[0];
       console.log("Found user:", { id: user.id, email: user.email });
       
       // Debug password comparison in detail
-      console.log("Password check:");
+      console.log("Password comparison:");
       console.log("- Input password:", password);
       console.log("- Stored password:", user.password);
-      console.log("- Match result:", user.password === password);
+      console.log("- Input password type:", typeof password);
+      console.log("- Stored password type:", typeof user.password);
+      console.log("- Input length:", String(password).length);
+      console.log("- Stored length:", String(user.password).length);
+      console.log("- Direct comparison result:", user.password === password);
       
-      // Compare passwords (case-sensitive)
-      // Ensure both are strings and trimmed to avoid whitespace issues
-      const inputPass = String(password).trim();
-      const storedPass = String(user.password).trim();
+      // Normalize both passwords for comparison
+      const inputPass = String(password);
+      const storedPass = String(user.password);
       
-      if (inputPass !== storedPass) {
-        console.log("Password mismatch");
+      // Perform multiple comparison checks
+      const exactMatch = storedPass === inputPass;
+      const trimmedMatch = storedPass.trim() === inputPass.trim();
+      
+      console.log("Comparison results:");
+      console.log("- Exact match:", exactMatch);
+      console.log("- Trimmed match:", trimmedMatch);
+      
+      // Use the most appropriate match
+      if (!exactMatch && !trimmedMatch) {
+        console.log("Password mismatch after all checks");
         throw new Error("Invalid email or password");
       }
       

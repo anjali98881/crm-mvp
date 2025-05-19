@@ -47,21 +47,21 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          mobile: string
+          mobile: number
           password: string
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
-          mobile: string
+          mobile: number
           password: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
-          mobile?: string
+          mobile?: number
           password?: string
         }
         Relationships: []
