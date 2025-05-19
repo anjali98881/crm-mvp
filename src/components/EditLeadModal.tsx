@@ -12,7 +12,7 @@ interface EditLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onSave: (id: string, updatedData: Omit<Lead, "id">) => void;
+  onSave: (id: string, updatedData: Omit<Lead, "id" | "user_id">) => void;
 }
 
 const EditLeadModal = ({ open, onOpenChange, lead, onSave }: EditLeadModalProps) => {

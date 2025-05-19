@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define type for Lead
+// Define type for Lead with user_id included
 export interface Lead {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ export interface Lead {
   email: string;
   isProspect: boolean;
   status: string;
-  user_id?: string; // Added user_id field to track lead ownership
+  user_id: string; // Added user_id as a required field
   created_at?: string;
   updated_at?: string;
 }
@@ -44,7 +44,7 @@ export interface NewLeadData {
 
 // Define props interface with the setAddLeadFunction function
 interface LeadTableProps {
-  onAddLead?: (addLeadFn: (data: NewLeadData) => void) => void;
+  onAddLead?: (addLeadFn: (data: NewLeadData) => Promise<Lead>) => void;
 }
 
 const LeadTable = ({ onAddLead }: LeadTableProps) => {
@@ -113,7 +113,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   };
 
   // Function to add a new lead
-  const addLead = async (leadData: NewLeadData) => {
+  const addLead = async (leadData: NewLeadData): Promise<Lead> => {
     try {
       if (!userId) {
         toast.error("Please log in to add leads");
@@ -251,7 +251,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   };
 
   // Handler for updating lead details
-  const handleLeadUpdate = async (id: string, updatedData: Omit<Lead, "id">) => {
+  const handleLeadUpdate = async (id: string, updatedData: Omit<Lead, "id" | "user_id">) => {
     try {
       if (!userId) {
         toast.error("You must be logged in to update leads");
