@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, UserPlus } from "lucide-react";
@@ -11,16 +11,25 @@ interface HeaderProps {
 }
 
 const Header = ({ title, actionButton }: HeaderProps) => {
-  // This would typically come from an auth context
-  const isLoggedIn = true; // Changed to true for this implementation
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
+  // Check if user is logged in when component mounts
+  useEffect(() => {
+    const userLoggedIn = localStorage.getItem("userLoggedIn") === "true";
+    setIsLoggedIn(userLoggedIn);
+  }, []);
+
   const handleSignOut = () => {
-    // Here you would typically sign out the user from your auth system
-    // For now, we'll just simulate a sign out with a timeout
+    // Remove user login info from localStorage
+    localStorage.removeItem("userLoggedIn");
+    localStorage.removeItem("userEmail");
+    
     toast.info("Signing out...");
     
     setTimeout(() => {
+      // Update logged in state
+      setIsLoggedIn(false);
       // Redirect to the sign in page
       navigate("/signin");
       toast.success("Successfully signed out!");

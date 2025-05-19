@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   // Email validation function
@@ -19,8 +21,9 @@ const SignIn = () => {
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
     
     // Validate email and password
     if (!email) {
@@ -40,13 +43,36 @@ const SignIn = () => {
     
     setIsLoading(true);
     
-    // Here you would typically authenticate with your backend
-    // For now, we'll simulate a login with a timeout
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Query the userdetails table to validate credentials
+      const { data, error } = await supabase
+        .from('userdetails')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
+      
+      if (error || !data) {
+        setErrorMessage("Invalid email or password");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Successful login
       toast.success("Login successful!");
+      
+      // Simulate setting up a session
+      localStorage.setItem("userLoggedIn", "true");
+      localStorage.setItem("userEmail", email);
+      
+      // Redirect to the home page
       navigate("/");
-    }, 1500);
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage("Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,6 +109,12 @@ const SignIn = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              
+              {errorMessage && (
+                <div className="text-red-500 text-sm font-medium">
+                  {errorMessage}
+                </div>
+              )}
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-4">

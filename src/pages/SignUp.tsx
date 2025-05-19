@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ const SignUp = () => {
     return mobileRegex.test(mobile);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate inputs
@@ -62,13 +63,29 @@ const SignUp = () => {
     
     setIsLoading(true);
     
-    // Here you would typically register the user with your backend
-    // For now, we'll simulate a signup with a timeout
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Insert user details into the userdetails table
+      const { error } = await supabase
+        .from('userdetails')
+        .insert([
+          { email, password, mobile }
+        ]);
+      
+      if (error) {
+        console.error("Error inserting user details:", error);
+        toast.error("Email already registered or something went wrong.");
+        setIsLoading(false);
+        return;
+      }
+      
       toast.success("Account created successfully!");
       navigate("/signin");
-    }, 1500);
+    } catch (error) {
+      console.error("Error during signup:", error);
+      toast.error("Failed to create account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
