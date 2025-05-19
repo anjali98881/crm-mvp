@@ -1,17 +1,18 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
-import LeadTable, { NewLeadData } from "@/components/LeadTable";
+import LeadTable from "@/components/LeadTable";
 import AddLeadModal from "@/components/AddLeadModal";
 import { Toaster } from "sonner";
+import { AddLeadFunction, NewLeadData } from "@/types/lead";
 
 const Index = () => {
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const addLeadFunctionRef = useRef<((data: NewLeadData) => void) | null>(null);
+  const [addLeadFunction, setAddLeadFunction] = useState<AddLeadFunction | null>(null);
   const navigate = useNavigate();
 
   // Check if user is logged in on component mount
@@ -26,14 +27,14 @@ const Index = () => {
   }, [navigate]);
 
   // Function to set the addLead function from LeadTable
-  const setAddLeadFunction = (addLeadFn: (data: NewLeadData) => void) => {
-    addLeadFunctionRef.current = addLeadFn;
+  const setAddLeadFn = (addLeadFn: AddLeadFunction) => {
+    setAddLeadFunction(() => addLeadFn);
   };
 
   // Function to handle adding a new lead
   const handleAddLead = (leadData: NewLeadData) => {
-    if (addLeadFunctionRef.current) {
-      addLeadFunctionRef.current(leadData);
+    if (addLeadFunction) {
+      addLeadFunction(leadData);
     }
   };
 
@@ -58,7 +59,7 @@ const Index = () => {
         } 
       />
       <main className="container mx-auto px-4 py-6">
-        <LeadTable onAddLead={setAddLeadFunction} />
+        <LeadTable onAddLead={setAddLeadFn} />
       </main>
       
       <AddLeadModal 

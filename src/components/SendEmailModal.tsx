@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Lead } from "./LeadTable";  // Import the Lead type from LeadTable.tsx
+import { Lead } from "@/types/lead";  // Import from our new types file
 
 interface SendEmailModalProps {
   open: boolean;

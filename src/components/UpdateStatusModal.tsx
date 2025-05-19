@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Lead } from "./LeadTable";  // Import the Lead type from LeadTable.tsx
+import { Lead } from "@/types/lead";  // Import from our new types file
 
 interface UpdateStatusModalProps {
   open: boolean;
