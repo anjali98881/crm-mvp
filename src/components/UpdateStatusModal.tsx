@@ -6,10 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+// Updated Lead interface to match the one in LeadTable.tsx
 interface Lead {
-  id: string;
+  id: string;  // Changed from number to string to match Supabase's UUID type
   name: string;
+  mobile: string;
+  email: string;
+  isProspect: boolean;
   status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface UpdateStatusModalProps {
