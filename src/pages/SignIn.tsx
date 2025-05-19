@@ -44,6 +44,8 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
+      console.log(`Attempting to log in user: ${email}`);
+      
       // Query the userdetails table without .single() to avoid errors when no user is found
       const { data, error } = await supabase
         .from('userdetails')
@@ -57,12 +59,18 @@ const SignIn = () => {
         return;
       }
       
+      console.log("Query result:", data);
+      
       // Check if any user was found
       if (data && data.length > 0) {
         // Check if the password matches
         const user = data[0];
+        console.log("Found user:", { id: user.id, email: user.email });
+        
+        // Case-sensitive password comparison
         if (user.password === password) {
           // Successful login
+          console.log("Login successful for user ID:", user.id);
           toast.success("Login successful!");
           
           // Set up user session
@@ -74,12 +82,12 @@ const SignIn = () => {
           navigate("/");
         } else {
           // Invalid password
-          console.log("Password mismatch");
+          console.log("Password mismatch - entered:", password, "stored:", user.password);
           setErrorMessage("Invalid email or password");
         }
       } else {
         // User not found
-        console.log("User not found");
+        console.log("User not found for email:", email);
         setErrorMessage("Invalid email or password");
       }
     } catch (error) {
