@@ -44,39 +44,47 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      // Query the userdetails table to validate credentials
+      // Query the userdetails table without .single() to avoid errors when no user is found
       const { data, error } = await supabase
         .from('userdetails')
         .select('*')
-        .eq('email', email)
-        .single();
+        .eq('email', email);
       
       if (error) {
         console.error("Login query error:", error);
-        setErrorMessage("Invalid email or password");
+        setErrorMessage("An error occurred during login");
         setIsLoading(false);
         return;
       }
       
-      // Check if the password matches
-      if (data && data.password === password) {
-        // Successful login
-        toast.success("Login successful!");
-        
-        // Set up user session
-        localStorage.setItem("userLoggedIn", "true");
-        localStorage.setItem("userEmail", email);
-        
-        // Redirect to the home page
-        navigate("/");
+      // Check if any user was found
+      if (data && data.length > 0) {
+        // Check if the password matches
+        const user = data[0];
+        if (user.password === password) {
+          // Successful login
+          toast.success("Login successful!");
+          
+          // Set up user session
+          localStorage.setItem("userLoggedIn", "true");
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userId", user.id);
+          
+          // Redirect to the home page
+          navigate("/");
+        } else {
+          // Invalid password
+          console.log("Password mismatch");
+          setErrorMessage("Invalid email or password");
+        }
       } else {
-        // Invalid credentials
-        console.log("Password mismatch or user not found");
+        // User not found
+        console.log("User not found");
         setErrorMessage("Invalid email or password");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setErrorMessage("Invalid email or password");
+      setErrorMessage("An error occurred during login");
     } finally {
       setIsLoading(false);
     }
