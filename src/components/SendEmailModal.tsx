@@ -21,30 +21,49 @@ interface SendEmailModalProps {
 
 const SendEmailModal = ({ open, onOpenChange, lead }: SendEmailModalProps) => {
   const [emailData, setEmailData] = useState({
+    from: "anjali98881@gmail.com", // Default from address
     subject: "",
     message: ""
   });
+
+  const [isSending, setIsSending] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEmailData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSending(true);
     
-    // Here you would typically send the email using an API
-    console.log("Sending email to:", lead.email, emailData);
-    
-    // Show success message
-    toast.success(`Email sent to ${lead.name}`);
-    
-    // Close modal and reset form
-    onOpenChange(false);
-    setEmailData({
-      subject: "",
-      message: ""
-    });
+    try {
+      // Here you would send the email using an API
+      // For now, we're simulating the API call with a timeout
+      console.log("Sending email from:", emailData.from);
+      console.log("Sending email to:", lead.email);
+      console.log("Subject:", emailData.subject);
+      console.log("Message:", emailData.message);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      toast.success(`Email sent to ${lead.name}`);
+      
+      // Close modal and reset form
+      onOpenChange(false);
+      setEmailData({
+        from: "anjali98881@gmail.com",
+        subject: "",
+        message: ""
+      });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -58,6 +77,20 @@ const SendEmailModal = ({ open, onOpenChange, lead }: SendEmailModalProps) => {
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="grid gap-4">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label htmlFor="from" className="text-right">
+                From
+              </Label>
+              <Input 
+                id="from" 
+                name="from"
+                value={emailData.from} 
+                onChange={handleChange} 
+                className="col-span-3" 
+                required
+              />
+            </div>
+            
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="recipient" className="text-right">
                 To
@@ -104,10 +137,16 @@ const SendEmailModal = ({ open, onOpenChange, lead }: SendEmailModalProps) => {
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
+              disabled={isSending}
             >
               Cancel
             </Button>
-            <Button type="submit">Send Email</Button>
+            <Button 
+              type="submit"
+              disabled={isSending}
+            >
+              {isSending ? "Sending..." : "Send Email"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
