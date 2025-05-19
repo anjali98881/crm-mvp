@@ -49,11 +49,11 @@ const SignIn = () => {
       
       console.log(`Attempting to log in user: ${trimmedEmail}`);
       
-      // Query the userdetails table
+      // Query the userdetails table with case-insensitive email comparison
       const { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
-        .eq('email', trimmedEmail);
+        .ilike('email', trimmedEmail);
       
       if (error) {
         console.error("Database query error:", error);
@@ -75,14 +75,14 @@ const SignIn = () => {
       console.log("Password check:");
       console.log("- Input password:", password);
       console.log("- Stored password:", user.password);
-      console.log("- Length input:", password.length);
-      console.log("- Length stored:", user.password.length);
-      console.log("- Characters (input):", [...password].map(c => c.charCodeAt(0)));
-      console.log("- Characters (stored):", [...user.password].map(c => c.charCodeAt(0)));
-      console.log("- Direct comparison result:", user.password === password);
+      console.log("- Match result:", user.password === password);
       
       // Compare passwords (case-sensitive)
-      if (user.password !== password) {
+      // Ensure both are strings and trimmed to avoid whitespace issues
+      const inputPass = String(password).trim();
+      const storedPass = String(user.password).trim();
+      
+      if (inputPass !== storedPass) {
         console.log("Password mismatch");
         throw new Error("Invalid email or password");
       }
@@ -101,6 +101,7 @@ const SignIn = () => {
     } catch (error) {
       console.error("Login error:", error);
       setErrorMessage(error instanceof Error ? error.message : "An error occurred during login");
+      toast.error(error instanceof Error ? error.message : "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
