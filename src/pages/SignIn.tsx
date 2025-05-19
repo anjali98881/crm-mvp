@@ -6,22 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Email validation function
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage("");
     
-    // Simple validation - just check if fields are not empty
+    // Validate email and password
     if (!email) {
       toast.error("Please enter your email");
+      return;
+    }
+    
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address");
       return;
     }
     
@@ -32,61 +40,13 @@ const SignIn = () => {
     
     setIsLoading(true);
     
-    try {
-      // Normalize the email by trimming and converting to lowercase
-      const normalizedEmail = email.trim().toLowerCase();
-      
-      console.log(`Attempting to log in user: ${normalizedEmail}`);
-      
-      // Query for users with this email (case insensitive)
-      let { data: users, error } = await supabase
-        .from('userdetails')
-        .select('*')
-        .ilike('email', normalizedEmail);
-      
-      if (error) {
-        console.error("Database query error:", error);
-        throw new Error("An error occurred during login");
-      }
-      
-      console.log("Query result:", users);
-      
-      if (!users || users.length === 0) {
-        console.log("No user found for email:", normalizedEmail);
-        throw new Error("Invalid email or password");
-      }
-      
-      // Take the first matching user
-      const user = users[0];
-      console.log("Found user:", { id: user.id, email: user.email });
-      
-      // Compare passwords - be flexible with password comparison
-      const inputPass = String(password).trim();
-      const storedPass = String(user.password).trim();
-      
-      if (inputPass !== storedPass) {
-        console.log("Password mismatch");
-        throw new Error("Invalid email or password");
-      }
-      
-      // Successful login
-      console.log("Login successful for user ID:", user.id);
-      toast.success("Login successful!");
-      
-      // Set up user session
-      localStorage.setItem("userLoggedIn", "true");
-      localStorage.setItem("userEmail", user.email);
-      localStorage.setItem("userId", user.id);
-      
-      // Redirect to the home page
-      navigate("/");
-    } catch (error) {
-      console.error("Login error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "An error occurred during login");
-      toast.error(error instanceof Error ? error.message : "An error occurred during login");
-    } finally {
+    // Here you would typically authenticate with your backend
+    // For now, we'll simulate a login with a timeout
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      toast.success("Login successful!");
+      navigate("/");
+    }, 1500);
   };
 
   return (
@@ -106,7 +66,7 @@ const SignIn = () => {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  type="text"
+                  type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -123,12 +83,6 @@ const SignIn = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              
-              {errorMessage && (
-                <div className="text-red-500 text-sm font-medium">
-                  {errorMessage}
-                </div>
-              )}
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-4">

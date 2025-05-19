@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -27,7 +26,7 @@ const SignUp = () => {
     return mobileRegex.test(mobile);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate inputs
@@ -63,45 +62,13 @@ const SignUp = () => {
     
     setIsLoading(true);
     
-    try {
-      // Check if email already exists
-      const { data: existingUser } = await supabase
-        .from('userdetails')
-        .select('email')
-        .eq('email', email)
-        .single();
-      
-      if (existingUser) {
-        toast.error("Email already registered. Please use a different email.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Insert user details into the userdetails table
-      // Convert mobile string to number to match the database type
-      const { error } = await supabase
-        .from('userdetails')
-        .insert({
-          email, 
-          password, 
-          mobile: Number(mobile) // Convert string to number
-        });
-      
-      if (error) {
-        console.error("Error inserting user details:", error);
-        toast.error("Failed to create account. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-      
+    // Here you would typically register the user with your backend
+    // For now, we'll simulate a signup with a timeout
+    setTimeout(() => {
+      setIsLoading(false);
       toast.success("Account created successfully!");
       navigate("/signin");
-    } catch (error) {
-      console.error("Error during signup:", error);
-      toast.error("Failed to create account. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    }, 1500);
   };
 
   return (
