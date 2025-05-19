@@ -1,8 +1,9 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Pencil, Trash2 } from "lucide-react";
+import { Mail, Pencil, Trash2, Loader2 } from "lucide-react";
 import UpdateStatusModal from "./UpdateStatusModal";
 import SendEmailModal from "./SendEmailModal";
 import EditLeadModal from "./EditLeadModal";
@@ -17,59 +18,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-
-// Sample data for the leads
-const initialLeads = [
-  {
-    id: 1,
-    name: "John Doe",
-    mobile: "+1 (555) 123-4567",
-    email: "john.doe@example.com",
-    isProspect: true,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    mobile: "+1 (555) 987-6543",
-    email: "jane.smith@example.com",
-    isProspect: false,
-    status: "Inactive",
-  },
-  {
-    id: 3,
-    name: "Robert Johnson",
-    mobile: "+1 (555) 456-7890",
-    email: "robert.johnson@example.com",
-    isProspect: true,
-    status: "Pending",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    mobile: "+1 (555) 789-0123",
-    email: "emily.davis@example.com",
-    isProspect: true,
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Michael Wilson",
-    mobile: "+1 (555) 321-0987",
-    email: "michael.wilson@example.com",
-    isProspect: false,
-    status: "Inactive",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 // Define type for Lead
 export interface Lead {
-  id: number;
+  id: string;
   name: string;
   mobile: string;
   email: string;
   isProspect: boolean;
   status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Define the type for new lead data coming from the form
@@ -87,28 +47,102 @@ interface LeadTableProps {
 }
 
 const LeadTable = ({ onAddLead }: LeadTableProps) => {
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
   const [isEditLeadModalOpen, setIsEditLeadModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch leads from Supabase on component mount
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  // Function to fetch leads from Supabase
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+
+      // Transform the data to match our Lead interface
+      const transformedLeads: Lead[] = data.map(lead => ({
+        id: lead.id,
+        name: lead.name,
+        mobile: lead.mobile,
+        email: lead.email,
+        isProspect: lead.is_prospect,
+        status: lead.status,
+        created_at: lead.created_at,
+        updated_at: lead.updated_at
+      }));
+      
+      setLeads(transformedLeads);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch leads');
+      toast.error('Failed to fetch leads');
+      console.error('Error fetching leads:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to add a new lead
-  const addLead = (leadData: NewLeadData) => {
-    const newId = leads.length > 0 ? Math.max(...leads.map(lead => lead.id)) + 1 : 1;
-    
-    const newLead: Lead = {
-      id: newId,
-      name: leadData.name,
-      mobile: leadData.mobileNumber,
-      email: leadData.email,
-      isProspect: leadData.prospect === "Yes" || leadData.prospect === "yes" || leadData.prospect === "true" || leadData.prospect === "True",
-      status: leadData.status
-    };
-    
-    setLeads(prevLeads => [...prevLeads, newLead]);
-    return newLead;
+  const addLead = async (leadData: NewLeadData) => {
+    try {
+      // Prepare the lead data for insertion
+      const newLeadData = {
+        name: leadData.name,
+        mobile: leadData.mobileNumber,
+        email: leadData.email,
+        is_prospect: leadData.prospect === "Yes" || leadData.prospect === "yes" || leadData.prospect === "true" || leadData.prospect === "True",
+        status: leadData.status
+      };
+
+      // Insert the new lead into Supabase
+      const { data, error } = await supabase
+        .from('leads')
+        .insert([newLeadData])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform the returned lead to match our Lead interface
+      const newLead: Lead = {
+        id: data.id,
+        name: data.name,
+        mobile: data.mobile,
+        email: data.email,
+        isProspect: data.is_prospect,
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      // Update the leads state with the new lead
+      setLeads(prevLeads => [newLead, ...prevLeads]);
+      
+      toast.success("Lead added successfully!");
+      return newLead;
+    } catch (err: any) {
+      toast.error(`Failed to add lead: ${err.message}`);
+      console.error('Error adding lead:', err);
+      throw err;
+    }
   };
 
   // Status badge component
@@ -164,26 +198,88 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   };
 
   // Handler for updating lead status
-  const handleStatusChange = (id: number, newStatus: string) => {
-    setLeads(leads.map(lead => 
-      lead.id === id ? { ...lead, status: newStatus } : lead
-    ));
-    setIsUpdateStatusModalOpen(false);
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      // Update the lead status in Supabase
+      const { error } = await supabase
+        .from('leads')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update the lead status in the UI
+      setLeads(leads.map(lead => 
+        lead.id === id ? { ...lead, status: newStatus } : lead
+      ));
+      
+      setIsUpdateStatusModalOpen(false);
+      toast.success("Status updated successfully");
+    } catch (err: any) {
+      toast.error(`Failed to update status: ${err.message}`);
+      console.error('Error updating status:', err);
+    }
   };
 
   // Handler for updating lead details
-  const handleLeadUpdate = (id: number, updatedData: Omit<Lead, "id">) => {
-    setLeads(leads.map(lead => 
-      lead.id === id ? { ...lead, ...updatedData } : lead
-    ));
+  const handleLeadUpdate = async (id: string, updatedData: Omit<Lead, "id">) => {
+    try {
+      // Prepare the data for update
+      const updateData = {
+        name: updatedData.name,
+        mobile: updatedData.mobile,
+        email: updatedData.email,
+        is_prospect: updatedData.isProspect,
+        status: updatedData.status
+      };
+
+      // Update the lead in Supabase
+      const { error } = await supabase
+        .from('leads')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update the lead in the UI
+      setLeads(leads.map(lead => 
+        lead.id === id ? { ...lead, ...updatedData } : lead
+      ));
+
+      toast.success("Lead updated successfully");
+    } catch (err: any) {
+      toast.error(`Failed to update lead: ${err.message}`);
+      console.error('Error updating lead:', err);
+    }
   };
 
   // Handler for deleting a lead
-  const handleDeleteLead = () => {
-    if (selectedLead) {
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+    
+    try {
+      // Delete the lead from Supabase
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', selectedLead.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Remove the lead from the UI
       setLeads(leads.filter(lead => lead.id !== selectedLead.id));
+      
       toast.success(`${selectedLead.name} has been removed from the leads list`);
       setIsDeleteConfirmOpen(false);
+    } catch (err: any) {
+      toast.error(`Failed to delete lead: ${err.message}`);
+      console.error('Error deleting lead:', err);
     }
   };
 
@@ -226,78 +322,94 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">Name</TableHead>
-            <TableHead className="w-[200px]">Mobile Number</TableHead>
-            <TableHead className="w-[250px]">Email</TableHead>
-            <TableHead className="w-[100px]">Prospect</TableHead>
-            <TableHead className="w-[150px]">Status</TableHead>
-            <TableHead className="w-[150px] text-center">Send Email</TableHead>
-            <TableHead className="w-[120px] text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {leads.map((lead) => (
-            <TableRow key={lead.id}>
-              <TableCell className="font-medium">{lead.name}</TableCell>
-              <TableCell>{lead.mobile}</TableCell>
-              <TableCell>{lead.email}</TableCell>
-              <TableCell>
-                {lead.isProspect ? (
-                  <CheckIcon className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XIcon className="h-5 w-5 text-red-500" />
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={lead.status} />
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleUpdateStatus(lead)}
-                    className="h-6 w-6 p-0 ml-1"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
-                  onClick={() => handleSendEmail(lead)}
-                >
-                  <Mail className="h-4 w-4" />
-                </Button>
-              </TableCell>
-              <TableCell>
-                <div className="flex justify-center items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleEditLead(lead)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleDeleteConfirm(lead)}
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
+      {loading ? (
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <span className="ml-2 text-lg text-gray-600">Loading leads...</span>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col justify-center items-center h-60">
+          <div className="text-red-500 mb-2">Failed to load leads</div>
+          <Button onClick={fetchLeads}>Retry</Button>
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="flex justify-center items-center h-60">
+          <div className="text-gray-500">No leads found. Add your first lead by clicking the "Add New Lead" button.</div>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">Name</TableHead>
+              <TableHead className="w-[200px]">Mobile Number</TableHead>
+              <TableHead className="w-[250px]">Email</TableHead>
+              <TableHead className="w-[100px]">Prospect</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              <TableHead className="w-[150px] text-center">Send Email</TableHead>
+              <TableHead className="w-[120px] text-center">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {leads.map((lead) => (
+              <TableRow key={lead.id}>
+                <TableCell className="font-medium">{lead.name}</TableCell>
+                <TableCell>{lead.mobile}</TableCell>
+                <TableCell>{lead.email}</TableCell>
+                <TableCell>
+                  {lead.isProspect ? (
+                    <CheckIcon className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XIcon className="h-5 w-5 text-red-500" />
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={lead.status} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleUpdateStatus(lead)}
+                      className="h-6 w-6 p-0 ml-1"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleSendEmail(lead)}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-center items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleEditLead(lead)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteConfirm(lead)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       {/* Update Status Modal */}
       {selectedLead && (

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ interface EditLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onSave: (id: number, updatedData: Omit<Lead, "id">) => void;
+  onSave: (id: string, updatedData: Omit<Lead, "id">) => void;
 }
 
 const EditLeadModal = ({ open, onOpenChange, lead, onSave }: EditLeadModalProps) => {
@@ -24,8 +24,8 @@ const EditLeadModal = ({ open, onOpenChange, lead, onSave }: EditLeadModalProps)
     status: lead.status
   });
 
-  // Reset form when lead changes
-  useState(() => {
+  // Reset form when lead changes using useEffect
+  useEffect(() => {
     setFormData({
       name: lead.name,
       mobile: lead.mobile,
@@ -33,7 +33,7 @@ const EditLeadModal = ({ open, onOpenChange, lead, onSave }: EditLeadModalProps)
       isProspect: lead.isProspect,
       status: lead.status
     });
-  });
+  }, [lead]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

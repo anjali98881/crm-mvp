@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface Lead {
-  id: number;
+  id: string;
   name: string;
   status: string;
 }
@@ -16,7 +16,7 @@ interface UpdateStatusModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onStatusChange: (id: number, status: string) => void;
+  onStatusChange: (id: string, status: string) => void;
 }
 
 const UpdateStatusModal = ({ 
@@ -56,9 +56,9 @@ const UpdateStatusModal = ({
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>
