@@ -10,9 +10,16 @@ import { toast } from "sonner";
 interface AddLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAddLead?: (leadData: {
+    name: string;
+    mobileNumber: string;
+    email: string;
+    prospect: string;
+    status: string;
+  }) => void;
 }
 
-const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
+const AddLeadModal = ({ open, onOpenChange, onAddLead }: AddLeadModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     mobileNumber: "",
@@ -32,10 +39,18 @@ const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically save the data to your database
-    console.log("Saving lead:", formData);
+    
+    // Add lead to table
+    if (onAddLead) {
+      onAddLead(formData);
+    }
+    
+    // Show success toast
     toast.success("Lead added successfully!");
+    
+    // Close the modal
     onOpenChange(false);
+    
     // Reset form
     setFormData({
       name: "",

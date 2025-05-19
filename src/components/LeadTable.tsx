@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,11 +51,49 @@ const initialLeads = [
   },
 ];
 
-const LeadTable = () => {
-  const [leads, setLeads] = useState(initialLeads);
+// Define type for Lead
+export interface Lead {
+  id: number;
+  name: string;
+  mobile: string;
+  email: string;
+  isProspect: boolean;
+  status: string;
+}
+
+// Define props interface with the addLead function
+interface LeadTableProps {
+  onAddLead?: (lead: Omit<Lead, 'id'>) => void;
+}
+
+const LeadTable = ({ onAddLead }: LeadTableProps = {}) => {
+  const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<(typeof initialLeads)[0] | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Function to add a new lead
+  const addLead = (leadData: { 
+    name: string; 
+    mobileNumber: string; 
+    email: string; 
+    prospect: string; 
+    status: string;
+  }) => {
+    const newId = leads.length > 0 ? Math.max(...leads.map(lead => lead.id)) + 1 : 1;
+    
+    const newLead: Lead = {
+      id: newId,
+      name: leadData.name,
+      mobile: leadData.mobileNumber,
+      email: leadData.email,
+      isProspect: leadData.prospect === "Yes" || leadData.prospect === "yes" || leadData.prospect === "true" || leadData.prospect === "True",
+      status: leadData.status
+    };
+    
+    setLeads(prevLeads => [...prevLeads, newLead]);
+    return newLead;
+  };
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
@@ -85,13 +124,13 @@ const LeadTable = () => {
   };
 
   // Handler for opening update status modal
-  const handleUpdateStatus = (lead: typeof initialLeads[0]) => {
+  const handleUpdateStatus = (lead: Lead) => {
     setSelectedLead(lead);
     setIsUpdateStatusModalOpen(true);
   };
 
   // Handler for opening send email modal
-  const handleSendEmail = (lead: typeof initialLeads[0]) => {
+  const handleSendEmail = (lead: Lead) => {
     setSelectedLead(lead);
     setIsSendEmailModalOpen(true);
   };
@@ -103,6 +142,11 @@ const LeadTable = () => {
     ));
     setIsUpdateStatusModalOpen(false);
   };
+
+  // Make addLead available to parent components
+  if (onAddLead) {
+    onAddLead(addLead);
+  }
 
   // Icons for the UI
   const CheckIcon = ({ className }: { className?: string }) => (
