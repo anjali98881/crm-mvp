@@ -7,22 +7,29 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-const SignIn = () => {
+const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mobile, setMobile] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Email validation function
+  // Email validation
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  // Mobile validation (basic validation for numbers only)
+  const isValidMobile = (mobile: string) => {
+    const mobileRegex = /^[0-9]{10,15}$/;
+    return mobileRegex.test(mobile);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate email and password
+    // Validate inputs
     if (!email) {
       toast.error("Please enter your email");
       return;
@@ -37,27 +44,42 @@ const SignIn = () => {
       toast.error("Please enter your password");
       return;
     }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
+    if (!mobile) {
+      toast.error("Please enter your mobile number");
+      return;
+    }
+
+    if (!isValidMobile(mobile)) {
+      toast.error("Please enter a valid mobile number (10-15 digits)");
+      return;
+    }
     
     setIsLoading(true);
     
-    // Here you would typically authenticate with your backend
-    // For now, we'll simulate a login with a timeout
+    // Here you would typically register the user with your backend
+    // For now, we'll simulate a signup with a timeout
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Login successful!");
-      navigate("/");
+      toast.success("Account created successfully!");
+      navigate("/signin");
     }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Welcome to CRM MVP</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">CRM MVP</h1>
         
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardTitle className="text-xl">New User? Please Sign Up Here</CardTitle>
+            <CardDescription>Create your account to get started</CardDescription>
           </CardHeader>
           
           <form onSubmit={handleSubmit}>
@@ -83,6 +105,17 @@ const SignIn = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <Input
+                  id="mobile"
+                  type="tel"
+                  placeholder="Your mobile number"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                />
+              </div>
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-4">
@@ -91,17 +124,17 @@ const SignIn = () => {
                 type="submit"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Login"}
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
               
               <div className="text-center text-sm text-gray-500">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <Button 
                   variant="link" 
                   className="p-0 h-auto font-semibold" 
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/signin")}
                 >
-                  Sign Up
+                  Sign In
                 </Button>
               </div>
             </CardFooter>
@@ -112,4 +145,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SignUp;

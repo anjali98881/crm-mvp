@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 
 interface HeaderProps {
   title: string;
@@ -19,12 +19,20 @@ const Header = ({ title, actionButton }: HeaderProps) => {
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
         <div className="flex items-center gap-4">
           {!isLoggedIn && (
-            <Link to="/signin">
-              <Button variant="outline" size="sm">
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            </Link>
+            <>
+              <Link to="/signin">
+                <Button variant="outline" size="sm">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button variant="default" size="sm">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Sign Up
+                </Button>
+              </Link>
+            </>
           )}
           {actionButton}
         </div>
