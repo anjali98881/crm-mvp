@@ -44,13 +44,16 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      console.log(`Attempting to log in user: ${email}`);
+      // Trim the email to remove any leading/trailing whitespace
+      const trimmedEmail = email.trim();
       
-      // First, check if the user exists and get all fields
+      console.log(`Attempting to log in user: ${trimmedEmail}`);
+      
+      // Query the userdetails table
       const { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
-        .eq('email', email.trim());
+        .eq('email', trimmedEmail);
       
       if (error) {
         console.error("Database query error:", error);
@@ -61,12 +64,22 @@ const SignIn = () => {
       
       // Check if any user was found
       if (!users || users.length === 0) {
-        console.log("No user found for email:", email);
+        console.log("No user found for email:", trimmedEmail);
         throw new Error("Invalid email or password");
       }
       
       const user = users[0];
       console.log("Found user:", { id: user.id, email: user.email });
+      
+      // Debug password comparison in detail
+      console.log("Password check:");
+      console.log("- Input password:", password);
+      console.log("- Stored password:", user.password);
+      console.log("- Length input:", password.length);
+      console.log("- Length stored:", user.password.length);
+      console.log("- Characters (input):", [...password].map(c => c.charCodeAt(0)));
+      console.log("- Characters (stored):", [...user.password].map(c => c.charCodeAt(0)));
+      console.log("- Direct comparison result:", user.password === password);
       
       // Compare passwords (case-sensitive)
       if (user.password !== password) {
