@@ -49,24 +49,31 @@ const SignIn = () => {
         .from('userdetails')
         .select('*')
         .eq('email', email)
-        .eq('password', password)
         .single();
       
-      if (error || !data) {
+      if (error) {
+        console.error("Login query error:", error);
         setErrorMessage("Invalid email or password");
         setIsLoading(false);
         return;
       }
       
-      // Successful login
-      toast.success("Login successful!");
-      
-      // Simulate setting up a session
-      localStorage.setItem("userLoggedIn", "true");
-      localStorage.setItem("userEmail", email);
-      
-      // Redirect to the home page
-      navigate("/");
+      // Check if the password matches
+      if (data && data.password === password) {
+        // Successful login
+        toast.success("Login successful!");
+        
+        // Set up user session
+        localStorage.setItem("userLoggedIn", "true");
+        localStorage.setItem("userEmail", email);
+        
+        // Redirect to the home page
+        navigate("/");
+      } else {
+        // Invalid credentials
+        console.log("Password mismatch or user not found");
+        setErrorMessage("Invalid email or password");
+      }
     } catch (error) {
       console.error("Login error:", error);
       setErrorMessage("Invalid email or password");
