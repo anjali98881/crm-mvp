@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Mail } from "lucide-react";
+import { Mail, Pencil } from "lucide-react";
 import UpdateStatusModal from "./UpdateStatusModal";
 import SendEmailModal from "./SendEmailModal";
 
@@ -210,15 +209,15 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
                 )}
               </TableCell>
               <TableCell>
-                <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                   <StatusBadge status={lead.status} />
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     onClick={() => handleUpdateStatus(lead)}
-                    className="text-xs"
+                    className="h-6 w-6 p-0 ml-1"
                   >
-                    Update Status
+                    <Pencil className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </TableCell>
