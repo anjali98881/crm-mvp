@@ -15,24 +15,13 @@ const SignIn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  // Email validation function
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     
-    // Validate email and password
+    // Simple validation - just check if fields are not empty
     if (!email) {
       toast.error("Please enter your email");
-      return;
-    }
-    
-    if (!isValidEmail(email)) {
-      toast.error("Please enter a valid email address");
       return;
     }
     
@@ -44,19 +33,16 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      // Trim the email to remove any leading/trailing whitespace
-      const trimmedEmail = email.trim().toLowerCase();
+      // Normalize the email by trimming and converting to lowercase
+      const normalizedEmail = email.trim().toLowerCase();
       
-      console.log(`Attempting to log in user: ${trimmedEmail}`);
+      console.log(`Attempting to log in user: ${normalizedEmail}`);
       
-      // First, log the password that was input to check its format
-      console.log("Input password:", password);
-      
-      // Query the userdetails table with exact email match
+      // Query for users with this email (case insensitive)
       let { data: users, error } = await supabase
         .from('userdetails')
         .select('*')
-        .eq('email', trimmedEmail);
+        .ilike('email', normalizedEmail);
       
       if (error) {
         console.error("Database query error:", error);
@@ -65,58 +51,21 @@ const SignIn = () => {
       
       console.log("Query result:", users);
       
-      // If no users found, try case-insensitive search
       if (!users || users.length === 0) {
-        console.log("No exact match found, trying case-insensitive search");
-        const { data: caseInsensitiveUsers, error: caseError } = await supabase
-          .from('userdetails')
-          .select('*')
-          .ilike('email', trimmedEmail);
-        
-        if (caseError) {
-          console.error("Case-insensitive query error:", caseError);
-          throw new Error("An error occurred during login");
-        }
-        
-        console.log("Case-insensitive results:", caseInsensitiveUsers);
-        
-        if (!caseInsensitiveUsers || caseInsensitiveUsers.length === 0) {
-          console.log("No user found for email:", trimmedEmail);
-          throw new Error("Invalid email or password");
-        }
-        
-        // Use the first matching user (fixed: assign to users instead of reassigning const)
-        users = caseInsensitiveUsers;
+        console.log("No user found for email:", normalizedEmail);
+        throw new Error("Invalid email or password");
       }
       
+      // Take the first matching user
       const user = users[0];
       console.log("Found user:", { id: user.id, email: user.email });
       
-      // Debug password comparison in detail
-      console.log("Password comparison:");
-      console.log("- Input password:", password);
-      console.log("- Stored password:", user.password);
-      console.log("- Input password type:", typeof password);
-      console.log("- Stored password type:", typeof user.password);
-      console.log("- Input length:", String(password).length);
-      console.log("- Stored length:", String(user.password).length);
-      console.log("- Direct comparison result:", user.password === password);
+      // Compare passwords - be flexible with password comparison
+      const inputPass = String(password).trim();
+      const storedPass = String(user.password).trim();
       
-      // Normalize both passwords for comparison
-      const inputPass = String(password);
-      const storedPass = String(user.password);
-      
-      // Perform multiple comparison checks
-      const exactMatch = storedPass === inputPass;
-      const trimmedMatch = storedPass.trim() === inputPass.trim();
-      
-      console.log("Comparison results:");
-      console.log("- Exact match:", exactMatch);
-      console.log("- Trimmed match:", trimmedMatch);
-      
-      // Use the most appropriate match
-      if (!exactMatch && !trimmedMatch) {
-        console.log("Password mismatch after all checks");
+      if (inputPass !== storedPass) {
+        console.log("Password mismatch");
         throw new Error("Invalid email or password");
       }
       
@@ -157,7 +106,7 @@ const SignIn = () => {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  type="email"
+                  type="text"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
