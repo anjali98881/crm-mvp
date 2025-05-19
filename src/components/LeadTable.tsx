@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -51,32 +50,11 @@ const initialLeads = [
   },
 ];
 
-// Define a type for a lead object
-export type Lead = {
-  id: number;
-  name: string;
-  mobile: string;
-  email: string;
-  isProspect: boolean;
-  status: string;
-};
-
-interface LeadTableProps {
-  onAddLead?: (lead: Lead) => void;
-}
-
-const LeadTable = ({ onAddLead }: LeadTableProps = {}) => {
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+const LeadTable = () => {
+  const [leads, setLeads] = useState(initialLeads);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-
-  // Function to add a new lead to the table
-  const addLead = (lead: Lead) => {
-    setLeads(prevLeads => [...prevLeads, lead]);
-    // Also call the optional callback if provided
-    if (onAddLead) onAddLead(lead);
-  };
+  const [selectedLead, setSelectedLead] = useState<(typeof initialLeads)[0] | null>(null);
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
@@ -107,13 +85,13 @@ const LeadTable = ({ onAddLead }: LeadTableProps = {}) => {
   };
 
   // Handler for opening update status modal
-  const handleUpdateStatus = (lead: Lead) => {
+  const handleUpdateStatus = (lead: typeof initialLeads[0]) => {
     setSelectedLead(lead);
     setIsUpdateStatusModalOpen(true);
   };
 
   // Handler for opening send email modal
-  const handleSendEmail = (lead: Lead) => {
+  const handleSendEmail = (lead: typeof initialLeads[0]) => {
     setSelectedLead(lead);
     setIsSendEmailModalOpen(true);
   };
@@ -235,4 +213,3 @@ const LeadTable = ({ onAddLead }: LeadTableProps = {}) => {
 };
 
 export default LeadTable;
-export { addLead };
