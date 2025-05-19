@@ -82,10 +82,10 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .order('created_at', { ascending: false });
+  .from('leads')
+  .select('*')
+  .eq('user_id', currentUserId)
+  .order('created_at', { ascending: false }) as unknown as { data: Lead[]; error: any };
       
       if (error) {
         throw error;
