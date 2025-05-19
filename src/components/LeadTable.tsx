@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,7 +28,7 @@ export interface Lead {
   email: string;
   isProspect: boolean;
   status: string;
-  user_id: string; // Added user_id as a required field
+  user_id: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -41,9 +42,12 @@ export interface NewLeadData {
   status: string;
 }
 
+// Define a simpler type for the add lead function to avoid circular references
+export type AddLeadFunction = (data: NewLeadData) => Promise<Lead>;
+
 // Define props interface with the setAddLeadFunction function
 interface LeadTableProps {
-  onAddLead?: (addLeadFn: (data: NewLeadData) => Promise<Lead>) => void;
+  onAddLead?: (addLeadFn: AddLeadFunction) => void;
 }
 
 const LeadTable = ({ onAddLead }: LeadTableProps) => {
@@ -117,7 +121,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
   };
 
   // Function to add a new lead - fixing the return type
-  const addLead = async (leadData: NewLeadData): Promise<Lead> => {
+  const addLead: AddLeadFunction = async (leadData) => {
     try {
       if (!userId) {
         toast.error("Please log in to add leads");
