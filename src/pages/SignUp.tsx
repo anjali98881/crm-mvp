@@ -64,6 +64,19 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
+      // Check if email already exists
+      const { data: existingUser } = await supabase
+        .from('userdetails')
+        .select('email')
+        .eq('email', email)
+        .single();
+      
+      if (existingUser) {
+        toast.error("Email already registered. Please use a different email.");
+        setIsLoading(false);
+        return;
+      }
+      
       // Insert user details into the userdetails table
       const { error } = await supabase
         .from('userdetails')
@@ -73,7 +86,7 @@ const SignUp = () => {
       
       if (error) {
         console.error("Error inserting user details:", error);
-        toast.error("Email already registered or something went wrong.");
+        toast.error("Failed to create account. Please try again.");
         setIsLoading(false);
         return;
       }
