@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import LeadTable from "@/components/LeadTable";
 import AddLeadModal from "@/components/AddLeadModal";
+import { Toaster } from "sonner";
 
 const Index = () => {
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
@@ -33,6 +34,8 @@ const Index = () => {
         open={isAddLeadModalOpen}
         onOpenChange={setIsAddLeadModalOpen}
       />
+      
+      <Toaster position="top-right" />
     </div>
   );
 };

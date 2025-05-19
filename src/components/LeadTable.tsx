@@ -1,8 +1,11 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { Mail } from "lucide-react";
+import UpdateStatusModal from "./UpdateStatusModal";
+import SendEmailModal from "./SendEmailModal";
 
 // Sample data for the leads
 const initialLeads = [
@@ -49,7 +52,10 @@ const initialLeads = [
 ];
 
 const LeadTable = () => {
-  const [leads] = useState(initialLeads);
+  const [leads, setLeads] = useState(initialLeads);
+  const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
+  const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<(typeof initialLeads)[0] | null>(null);
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
@@ -57,12 +63,15 @@ const LeadTable = () => {
     
     switch (status.toLowerCase()) {
       case "active":
+      case "open":
         badgeClass = "bg-green-100 text-green-800 hover:bg-green-100";
         break;
       case "inactive":
+      case "closed":
         badgeClass = "bg-red-100 text-red-800 hover:bg-red-100";
         break;
       case "pending":
+      case "in progress":
         badgeClass = "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
         break;
       default:
@@ -74,6 +83,26 @@ const LeadTable = () => {
         {status}
       </Badge>
     );
+  };
+
+  // Handler for opening update status modal
+  const handleUpdateStatus = (lead: typeof initialLeads[0]) => {
+    setSelectedLead(lead);
+    setIsUpdateStatusModalOpen(true);
+  };
+
+  // Handler for opening send email modal
+  const handleSendEmail = (lead: typeof initialLeads[0]) => {
+    setSelectedLead(lead);
+    setIsSendEmailModalOpen(true);
+  };
+
+  // Handler for updating lead status
+  const handleStatusChange = (id: number, newStatus: string) => {
+    setLeads(leads.map(lead => 
+      lead.id === id ? { ...lead, status: newStatus } : lead
+    ));
+    setIsUpdateStatusModalOpen(false);
   };
 
   // Icons for the UI
@@ -108,22 +137,6 @@ const LeadTable = () => {
     </svg>
   );
 
-  const MailIcon = ({ className }: { className?: string }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="20" height="16" x="2" y="4" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </svg>
-  );
-
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <Table>
@@ -151,17 +164,51 @@ const LeadTable = () => {
                 )}
               </TableCell>
               <TableCell>
-                <StatusBadge status={lead.status} />
+                <div className="flex flex-col gap-2">
+                  <StatusBadge status={lead.status} />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleUpdateStatus(lead)}
+                    className="text-xs"
+                  >
+                    Update Status
+                  </Button>
+                </div>
               </TableCell>
               <TableCell className="text-center">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MailIcon className="h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0"
+                  onClick={() => handleSendEmail(lead)}
+                >
+                  <Mail className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Update Status Modal */}
+      {selectedLead && (
+        <UpdateStatusModal
+          open={isUpdateStatusModalOpen}
+          onOpenChange={setIsUpdateStatusModalOpen}
+          lead={selectedLead}
+          onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {/* Send Email Modal */}
+      {selectedLead && (
+        <SendEmailModal
+          open={isSendEmailModalOpen}
+          onOpenChange={setIsSendEmailModalOpen}
+          lead={selectedLead}
+        />
+      )}
     </div>
   );
 };
