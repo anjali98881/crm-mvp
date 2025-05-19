@@ -5,19 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { Lead } from "./LeadTable";
 
 interface AddLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onLeadAdded?: (lead: Lead) => void;
 }
 
-const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
+const AddLeadModal = ({ open, onOpenChange, onLeadAdded }: AddLeadModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     mobileNumber: "",
     email: "",
-    prospect: "",
+    isProspect: "true", // default to true
     status: "New"
   });
 
@@ -26,22 +29,47 @@ const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleProspectChange = (value: string) => {
+    setFormData(prev => ({ ...prev, isProspect: value }));
+  };
+
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({ ...prev, status: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically save the data to your database
-    console.log("Saving lead:", formData);
+    
+    // Generate a unique ID for the new lead (simple implementation)
+    const newLeadId = Date.now();
+    
+    // Create the new lead object
+    const newLead: Lead = {
+      id: newLeadId,
+      name: formData.name,
+      mobile: formData.mobileNumber,
+      email: formData.email,
+      isProspect: formData.isProspect === "true", // Convert string to boolean
+      status: formData.status
+    };
+    
+    // Call the parent component's callback with the new lead
+    if (onLeadAdded) {
+      onLeadAdded(newLead);
+    }
+    
+    // Show success toast
     toast.success("Lead added successfully!");
+    
+    // Close the modal
     onOpenChange(false);
-    // Reset form
+    
+    // Reset form for next use
     setFormData({
       name: "",
       mobileNumber: "",
       email: "",
-      prospect: "",
+      isProspect: "true",
       status: "New"
     });
   };
@@ -98,17 +126,25 @@ const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
             </div>
             
             <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="prospect" className="text-right">
+              <Label className="text-right">
                 Prospect
               </Label>
-              <Input 
-                id="prospect" 
-                name="prospect"
-                value={formData.prospect} 
-                onChange={handleChange} 
-                className="col-span-3" 
-                required
-              />
+              <div className="col-span-3">
+                <RadioGroup 
+                  value={formData.isProspect} 
+                  onValueChange={handleProspectChange}
+                  className="flex items-center space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="true" id="prospect-yes" />
+                    <Label htmlFor="prospect-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="false" id="prospect-no" />
+                    <Label htmlFor="prospect-no">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-2">
@@ -124,10 +160,11 @@ const AddLeadModal = ({ open, onOpenChange }: AddLeadModalProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="New">New</SelectItem>
-                  <SelectItem value="Contacted">Contacted</SelectItem>
-                  <SelectItem value="Qualified">Qualified</SelectItem>
-                  <SelectItem value="Proposal">Proposal</SelectItem>
-                  <SelectItem value="Negotiation">Negotiation</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
