@@ -1,17 +1,11 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-
-interface Lead {
-  id: number;
-  name: string;
-  email: string;
-}
+import { Lead } from "./LeadTable";  // Import the Lead type from LeadTable.tsx
 
 interface SendEmailModalProps {
   open: boolean;
