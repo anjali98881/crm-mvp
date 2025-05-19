@@ -93,7 +93,6 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
       }
 
       // Transform the data to match our Lead interface
-      // TypeScript fix: Explicitly cast each lead to include user_id
       const transformedLeads: Lead[] = data.map(lead => ({
         id: lead.id,
         name: lead.name,
@@ -101,7 +100,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: lead.email,
         isProspect: lead.is_prospect,
         status: lead.status,
-        user_id: (lead as any).user_id || currentUserId, // Use type assertion to handle missing user_id
+        user_id: (lead as any).user_id || currentUserId,
         created_at: lead.created_at,
         updated_at: lead.updated_at
       }));
@@ -117,7 +116,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
     }
   };
 
-  // Function to add a new lead
+  // Function to add a new lead - fixing the return type
   const addLead = async (leadData: NewLeadData): Promise<Lead> => {
     try {
       if (!userId) {
@@ -151,7 +150,6 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
       }
 
       // Transform the returned lead to match our Lead interface
-      // TypeScript fix: Explicitly cast to include user_id
       const newLead: Lead = {
         id: data.id,
         name: data.name,
@@ -159,7 +157,7 @@ const LeadTable = ({ onAddLead }: LeadTableProps) => {
         email: data.email,
         isProspect: data.is_prospect,
         status: data.status,
-        user_id: (data as any).user_id || userId, // Use type assertion to handle missing user_id
+        user_id: (data as any).user_id || userId,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
