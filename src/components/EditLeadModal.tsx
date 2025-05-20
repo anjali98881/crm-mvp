@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Lead } from "@/types/lead";  // Import from our new types file
+import { Lead } from "./LeadTable";  // Import the Lead type from LeadTable.tsx
 
 interface EditLeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onSave: (id: string, updatedData: Omit<Lead, "id" | "user_id">) => void;
+  onSave: (id: string, updatedData: Omit<Lead, "id">) => void;
 }
 
 const EditLeadModal = ({ open, onOpenChange, lead, onSave }: EditLeadModalProps) => {
